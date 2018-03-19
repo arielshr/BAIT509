@@ -1,0 +1,15 @@
+Answer the following questions, and upload your results to your github repo. Remember, your answers do not have to be correct to earn participation points!
+
+Q1. Bagging is a special case of random forests under which case?
+Answer: when m=p, bagging is a special case of random forests.
+Q2. What are the hyperparameters we can control for random forests?
+Answer: m: the number of predictors in a random subset; 
+Q3. Suppose you have the following paired data of (x,y): (1,2), (1,5), (2,0). Which of the following are valid bootstrapped data sets? Why/why not?
+(1,0), (1,2), (1,5)
+(1,2), (2,0)
+(1,2), (1,2), (1,5)
+Answer: (1,2), (2,0) and (1,2), (1,2), (1,5)
+For each of the above valid bootstapped data sets, which observations are out-of-bag (OOB)?
+You make a random forest consisting of four trees. You obtain a new observation of predictors, and would like to predict the response. What would your prediction be in the following cases?
+Regression: your trees make the following four predictions: 1,1,3,3.
+Classification: your trees make the following four predictions: “A”, “A”, “B”, “C”.
