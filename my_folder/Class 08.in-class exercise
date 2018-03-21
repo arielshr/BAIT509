@@ -1,0 +1,15 @@
+For (1) and (2) below, you’re choosing between two candidates to hire. Discuss the pros and cons of choosing one candidate over the other in the following situations.
+
+Q1. Both are predicted to have the same productivity score of 75, but have the following probabilistic forecasts.
+
+Though they have the same mean of 75, A has a more stable probability distribution than B since it's more concentrated. The productivity of A wouldn't fluctuate significantly during the work, so that he can ensure a consistent working efficiency and avoid significant task delays. However, the productivity of B can sometimes increase to over 80, which cannot be achieved by A since its highest productivity is about 77, so that B can complete the work highly efficient sometimes. 
+
+Correct: A: less risky, B: gamble, but sometimes achieve possible higher productivity.
+
+Q2. Two “non-overlapping” forecasts:
+
+A has a more concentrated distribution with a lower mean of 60, while B has a decentralized distribution with a higher mean of 80. Since the lowest possible productivity of B is still higher than the highest possible productivity of A, I would go with B because B can ensure an overall higher productivity than A. However, the fluctuation in B's productivity could be large, which indicates that when we need to promise our client's a delivery date, it would be hard for us to estimate a suitable date and might have significant delays.
+
+Q3. You’ve formed a probabilist forecast for a particular value of the predictors, displayed below as a density. You then collect test data for that same value of the predictor, indicated as the points below the density. What is the problem with the probabilistic forecast?
+
+The probability forecast is biased. Reduce K values to fix this problem.
