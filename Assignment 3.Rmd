@@ -1,0 +1,249 @@
+# BAIT 509 Assignment 3
+
+__Name__: Hongrun(Ariel) Sun #78214988
+
+## Exercise 1 (15%): Probabilistic Forecasting 
+
+__Language__: python or R
+
+__Language hints__: I don't know of any software that automates this procedure, so you'll probably have to do this manually. The `filter` function in the `dplyr` package in R is useful for subsetting a data frame.
+
+The `diamonds` dataset from the `ggplot2` R package contains information about 53,940 diamonds. We will be using length, width, and depth (`x`, `y`, and `z`m respectively) to predict the quality of the cut (variable `cut`). Cut quality is categorical with five possible levels. 
+
+You own a shop that sells diamond, and you receive word of two new diamonds, with the following dimensions: 
+
+- Diamond 1: `x=4`, `y=4`, and `z=3`.
+- Diamond 2: `x=6`, `y=6`, and `z=4`.
+
+You can choose only one diamond to include in your store, but only have this information. You want the diamond with the highest cut quality.
+
+Answer the following questions.
+
+1. Produce a probabilistic forecast of the cut quality for both diamonds, using a moving window (loess-like) approach with a window width of 0.5. It's sufficient to produce a bar plot showing the probabilities of each class, for each of the two diamonds. 
+
+```{r}
+library("ggplot2")
+library(tidyverse)
+library(Lahman)
+library(knitr)
+library(dplyr)
+library(quantreg)
+library(cowplot)
+
+attach(diamonds)
+dat <- diamonds
+
+r <- 0.5
+
+dat.sub.1 <- filter(dat, ( (x - 4) ^ 2 + (y - 4) ^ 2 + (z - 3) ^ 2) ^ ( 1 / 2 ) <= 0.5)
+
+perc.1 <- table(dat.sub.1$cut)/length(dat.sub.1$cut)
+
+dat.sub.2 <- filter(dat, ( (x - 6) ^ 2 + (y - 6) ^ 2 + (z - 4) ^ 2) ^ ( 1 / 2 ) <= 0.5)
+
+perc.2 <- table(dat.sub.2$cut)/length(dat.sub.2$cut)
+
+dev.off()
+par(mfrow=c(1,2))
+barplot(perc.1, main = "Probability of each class (Diamond 1)", ylim = c(0, 0.4))
+barplot(perc.2, main = "Probability of each class (Diamond 2)", ylim = c(0, 0.4))
+```
+
+2. What cut quality would be predicted by a local classifier for both diamonds? Does this help you make a decision?
+
+Prediction of Diamond 1: Very Good
+Prediction of Diamond 2: Very Good
+
+If I only know the predicted cut quality of those two diamonds, it wouldn’t be helpful for me to make decisions since the predictions are the same.
+
+3. Looking at the probabilistic forecasts, make a case for one diamond over the other by weighing the pros and cons of each.
+
+I would go with Diamond 1 since it has a higher probability of being very good, which is more than 0.35, compared to a lower than 0.3 probability of being very good for Diamond 2. Besides, Diamond 1 also has a much higher probability of more than 0.98 for being better than good, while Diamond 2 only has a probability of around 0.9 for being better than good.
+
+However, Diamond 1 has a larger fluctuation in probabilistic forecasts, the probability of each category varies greatly. On the contrary, the probabilistic forecasts for Diamonds 2 are scattered more evenly, therefore it would have smaller risk if we choose Diamond 2.
+
+## Exercise 2: Quantile Regression
+
+__Language__: python or R (recommended).
+
+__Language hints__: You might find the `rq` function in the `quantreg` package useful, or even the `geom_quantile` function in the `ggplot2` package for plotting. If you choose to use python, [here](http://www.statsmodels.org/dev/examples/notebooks/generated/quantile_regression.html) is a demo that you might find useful.
+
+The `auto_data.csv`, located in the `data` folder, contains automotive data for 392 cars. The `mtcars` dataset, that "comes with" R, contains automotive data for 32 cars.
+
+### 2(a) (15%)
+
+Using the `mtcars` dataset only, use linear quantile regression to estimate the 0.25-, 0.5-, and 0.75-quantiles of fuel efficiency (`mpg`) from the weight (`wt`) of a vehicle. 
+
+1. Plot the data with the three lines/curves overtop. This gives us a "continuous version" of a boxplot (at least, the "box part" of the boxplot).
+
+```{r}
+mt <- mtcars
+
+ggplot(mt, aes(wt, mpg)) +
+  geom_point(alpha=0.5, color = "orange") +
+  geom_quantile(aes(colour="0.25"), quantiles=0.25) +
+  geom_quantile(aes(colour="0.5"), quantiles=0.5) +
+  geom_quantile(aes(colour="0.75"), quantiles=0.75) +
+  scale_colour_discrete("Quantile\nLevel") +
+  ggtitle('Relationship between wt and mpg with 3 quantitles') +
+  theme_bw() +
+  labs(x="Weight of a vehicle",
+       y="Fuel efficiency")
+```
+
+
+2. For a car that weighs 3500 lbs (i.e., `wt=3.5`), what is an estimate of the 0.75-quantile of `mpg`? Interpret this quantity.
+
+```{r}
+fit.1 <- rq(mpg ~ wt, data=mt, tau=c(0.25, 0.5, 0.75))
+
+predict(fit.1, newdata=data.frame(wt = 3.5))
+```
+
+Estimate of the 0.75-quantile of mpg when wt = 3.5: 20.23892.
+
+This quantity indicates that it has a 25% chance of getting a fuel efficiency higher than 20.23892, and a 75% chance of getting a fuel efficiency lower than 20.23892.
+
+3. What problems do we run into when estimating these quantiles for a car that weighs 1500 lbs (i.e., `wt=1.5`)? Hint: check out your three quantile estimates for this car.
+
+```{r}
+predict(fit.1, newdata=data.frame(wt = 1.5))
+```
+
+Problem: Crossing quantiles
+When wt equals to 1.5, the estimate of 0.25-quantile of mpg is larger than that of 0.5-quantile of mpg. Two lines of different quantiles crossed, thus giving an invalid result
+
+### 2(b) (15%)
+
+Let's now use the `auto_data.csv` data as our training data, and the `mtcars` data as a validation set. So, you can ignore your results from 2(a). 
+
+__Note__: In both `mtcars` and `auto_data.csv`, the fuel efficiency is titled `mpg` and have the same units as the `mtcars` data. The weight column is titled `weight` in the csv file, and is in lbs, but is title `wt` in `mtcars`, where the units are thousands of lbs.
+
+1. To the training data, fit the 0.5-quantile of `mpg` using the "weight" variable as the predictor. Fit two models: a linear model and a quadratic model.
+
+```{r}
+train <- read.csv(file.choose())
+train$wt <- train$weight
+
+fit.2 <- rq(mpg ~ wt, data=train, tau=0.5)
+fit.2
+fit.3 <- rq(mpg ~ poly(wt, 2), data=train, tau=0.5)
+fit.3
+```
+
+2. Plot the two quantile regression curves overtop of the training data.
+
+
+3. What error measurement is appropriate here? Hint: it's not mean squared error. 
+
+Check function
+
+4. Using the validation data, calculate the error of both models. You'll first have to convert the "weight" variable to be in the same units as your training data.
+
+
+
+5. Use the error measurements and the plot to justify which of the two models is more appropriate.
+
+__Hint__: A quadratic model is the same as a linear one with a new predictor that's computed as the square of the original predictor. You can either make the new column in your data frame, or indicate that you want a polynomial of degree 2 when specifying the `formula` by indicating `y ~ poly(x, 2)` for response `y` and predictor `x`. The formula `y ~ x + x^2` won't work.
+
+
+## Exercise 3 (20%): SVM Concepts 
+
+__Language__: Only low-level programming is allowed here -- no machine learning packages are to be used.
+
+From Section 9.7 in the [ISLR book](http://www-bcf.usc.edu/~gareth/ISL/) (that starts on page 368), complete the following:
+
+- Question 1(a)
+This problem involves hyperplanes in two dimensions.
+
+(a) Sketch the hyperplane 1 + 3X1 − X2 = 0. Indicate the set of points for which 1 + 3X1 − X2 > 0, as well as the set of points for which 1 + 3X1 − X2 < 0.
+
+```{r}
+
+datfr <- data.frame(matrix(ncol = 2, nrow = 200))
+datfr$X1 <- runif(200, 0, 200)
+datfr$X2 <- runif(200, 0, 600)
+
+ggplot(datfr, aes(X1, X2)) +
+  geom_point(alpha=0.5, color = "orange") +
+  geom_abline(slope = 3, intercept = 1) +
+  ggtitle('Sketch') +
+  theme_bw() +
+    labs(x="X1",
+       y="X2")
+
+```
+
+From above plot, we can know that the set of points for which 1 + 3X1 − X2 > 0 is in the area below the black line, while the set of points for which 1 + 3X1 − X2 < 0 is in the area above the black line.
+
+- Question 3, parts (a)-(f) inclusive.
+
+Here we explore the maximal margin classifier on a toy data set.
+
+(a) We are given n = 7 observations in p = 2 dimensions. For each observation, there is an associated class label. Sketch the observations.
+
+```{r}
+
+dat.2 <- data.frame(matrix(ncol = 3, nrow = 7))
+dat.2$X1 <- c(3, 2, 4, 1, 2, 4, 4)
+dat.2$X2 <- c(4, 2, 4, 4, 1, 3, 1)
+dat.2$X3 <- as.factor(c(1, 1, 1, 1, 2, 2, 2))
+colnames(dat.2) <- c("X1", "X2", "Y")
+
+ggplot(dat.2, aes(X1, X2, colour = Y)) +
+  geom_point() +
+  ggtitle('Sketch') +
+  scale_colour_discrete(labels = c('Red','Blue')) +
+  theme_bw() +
+    labs(x="X1",
+       y="X2")
+
+```
+
+(b) Sketch the optimal separating hyperplane, and provide the equation for this hyperplane (of the form (9.1)).
+
+```{r}
+
+sl <- 1
+int <- -0.5
+
+ggplot(dat.2, aes(X1, X2, colour = Y)) +
+  geom_point() +
+  geom_abline(slope = sl, intercept = int, colour = "grey") +
+  ggtitle('Sketch') +
+  scale_colour_discrete(labels = c('Red','Blue')) +
+  theme_bw() +
+    labs(x="X1",
+       y="X2")
+
+```
+
+The equation for this hyperplane is 0.5 + X1 - X2 = 0
+
+(c) Describe the classification rule for the maximal margin classifier. It should be something along the lines of “Classify to Red if β0 +β1X1 +β2X2 > 0, and classify to Blue otherwise.” Provide the values for β0, β1, and β2.
+
+Maximal margin classifier:
+Classify to Blue if 0.5 + X1 - X2 > 0, and classify to Red otherwise.
+
+(d) On your sketch, indicate the margin for the maximal margin hyperplane.
+
+```{r}
+ggplot(dat.2, aes(X1, X2, colour = Y)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = -0.5, colour = "grey") +
+  geom_abline(slope = 1, intercept = -0.95, color = "grey", linetype = "dashed") +
+  geom_abline(slope = 1, intercept = -0.05, color = "grey", linetype = "dashed") +
+  ggtitle('Sketch') +
+  scale_colour_discrete(labels = c('Red','Blue')) +
+  theme_bw() +
+    labs(x="X1",
+       y="X2")
+```
+
+(e) Indicate the support vectors for the maximal margin classifier.
+
+Support vectors: Observation 2, 3, 5, 6.
+
+(f) Argue that a slight movement of the seventh observation would not affect the maximal margin hyperplane.
+
+Since the 7th observation is not a support vector, and also far away from the classifier, thus its slight movement won't affect building the maximal margin classifier. We build the maximal marginal classier only based on the support vectors.
