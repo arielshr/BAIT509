@@ -1,1 +1,27 @@
 
+Q1. Construct the decision rule according to this classification boundary. How would you classify a new observation that has x1=6 and x2=10?
+
+Classification rule: x1 = 7.5
+I would class the new observation to A since it's left to the classifier.
+
+Q2. What size is the margin here?
+
+Size of margin: 2
+
+Q3. Which observations receive a penalty? Which observations are the support vectors?
+
+Observation receiving a penalty: 6, 7, 8, 9, 10
+Support vectors: Observation 8, 9
+
+Q4. What is the total penalty here?
+
+0.25 + 0.25 + 1.75 + 2.25 + 1.25 = 5.75
+
+Q5. Can I choose a bigger margin if my total allowable penalty is 6?
+
+Yes, since now we still have 0.25 margin left to increase to 6.
+
+Q6. Are the data separable? If so, what are the support vectors?
+
+Yes.
+Support vectors: Observation 4, 8, 9
